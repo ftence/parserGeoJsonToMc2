@@ -13,72 +13,84 @@ confFile='geojson.conf'
 inputConf=open(confFile, 'r')
 jsonConf=json.load(inputConf)
 
-# Load GEO.JSON file linked in conf
-sourceFileName=jsonConf.get('filename')
-inputFile=open(sourceFileName, 'r')
-jsonDecode=json.load(inputFile)
+# Each element of the conf corresponds to one GeoJson file
+for geoJsonConf in jsonConf:
 
-# Get GEOJSON file features (includes the geometry and properties)
-features=jsonDecode.get('features')
-completeList="<% [ "
+  # Load GEO.JSON file linked in conf
+  sourceFileName=geoJsonConf.get('filename')
+  inputFile=open(sourceFileName, 'r')
+  jsonDecode=json.load(inputFile)
 
-for item in features:
+  # Load current GEOSJON precision
+  errorPercentage=geoJsonConf.get('errorPercentage', '0.1')
+  inside=geoJsonConf.get('inside', 'true')
 
-  # Load prefix directory set in conf
-  # This used to set for example the country
-  directory=jsonConf.get('prefix')
+  # Get GEOJSON file features (includes the geometry and properties)
+  features=jsonDecode.get('features')
+  completeList="<% [ "
 
-  # Appens directory with each name of the properties define in directories in conf
-  # This is used to generate subname for the current directory as region or state
-  for repository in jsonConf.get('directories'):
-    name = item.get('properties').get(repository).replace(" ", "_")
-    nameClean = re.sub('[^A-Za-z0-9]+', ' ', name).lower()
-    directory= directory + nameClean.replace(" ", "_") + "/"
+  for item in features:
 
-  # Initial WarpScript file name
-  warpScriptFileName=""
+    # Load prefix directory set in conf
+    # This used to set for example the country
+    directory=geoJsonConf.get('prefix')
 
-  # Load warpscript file name from the conf (if exists otherwise don't change it's value)
-  warpScriptFileName=jsonConf.get('warpscriptName', "")
+    # Appens directory with each name of the properties define in directories in conf
+    # This is used to generate subname for the current directory as region or state
+    for repository in geoJsonConf.get('directories'):
+      name = item.get('properties').get(repository).replace(" ", "_")
+      nameClean = re.sub('[^A-Za-z0-9]+', ' ', name).lower()
+      directory= directory + nameClean.replace(" ", "_") + "/"
 
-  # If warpscript file name is not define
-  if "" == warpScriptFileName:
+    # Initial WarpScript file name
+    warpScriptFileName=""
 
-    # Load from the conf WarpScript load
-    jsonLoad=jsonConf.get('warpscriptLoad', "")
+    # Load warpscript file name from the conf (if exists otherwise don't change it's value)
+    warpScriptFileName=geoJsonConf.get('warpscriptName', "")
 
-    # when conf exists allowing the user to choose the file name from GEOJSON attribute
-    if not "" == jsonLoad:
-      # Then get from the GEOJSON properties the current WarpScript file name
-      currentFileName=item.get('properties').get(jsonLoad).replace(" ", "_")
-      warpScriptFileName=re.sub('[^A-Za-z0-9]+', ' ', currentFileName).lower().title().replace(" ", "_")
+    # If warpscript file name is not define
+    if "" == warpScriptFileName:
 
-  # When an output file name is set in conf
-  if not "" == warpScriptFileName:
+      # Load from the conf WarpScript load
+      jsonLoad=geoJsonConf.get('warpscriptLoad', "")
 
-    # Create local directory
-    if not os.path.exists(directory):
-      os.makedirs(directory)
+      # when conf exists allowing the user to choose the file name from GEOJSON attribute
+      if not "" == jsonLoad:
+        # Then get from the GEOJSON properties the current WarpScript file name
+        currentFileName=item.get('properties').get(jsonLoad).replace(" ", "_")
+        warpScriptFileName=re.sub('[^A-Za-z0-9]+', ' ', currentFileName).lower().title().replace(" ", "_")
 
-    # Write WarpScript macro in file based on current data and conf
-    f = open(directory + warpScriptFileName + '.mc2', 'w')
-    f.write("'" + json.dumps(item.get('geometry')) + "' \n")
-    f.write("0.001 false GEO.JSON \n")
-    f.write("'_geo' STORE \n")
-    f.write("<% \n")
-    f.write(" !$_geo \n")
-    f.write("%> \n")
+    # When an output file name is set in conf
+    if not "" == warpScriptFileName:
+
+      # Create local directory
+      if not os.path.exists(directory):
+        os.makedirs(directory)
+
+      # Write WarpScript macro in file based on current data and conf
+      f = open(directory + warpScriptFileName + '.mc2', 'w')
+      f.write("'" + json.dumps(item.get('geometry')) + "' \n")
+      f.write(errorPercentage + " " + inside + " GEO.JSON \n")
+      f.write("'_geo' STORE \n")
+      f.write("<% \n")
+      f.write(" !$_geo \n")
+      f.write("%> \n")
+      f.close()
+
+    # Write list indicating all macro stored
+    completeList= completeList + " '@orbit/geo/" + directory + warpScriptFileName + "'"
+
+  # Finish WarpSctip list and macro
+  completeList=completeList + " ] %>"
+
+  # Store complete list in a macro only if user specify a file nime to use in conf file
+  allMacro=geoJsonConf.get('allMacroFileName', "")
+
+  if not "" == allMacro:
+
+    # Write complete macro list inside a WarpScript macro file
+    f = open(geoJsonConf.get('prefix') + allMacro + '.mc2', 'w')
+    f.write(completeList)
     f.close()
-
-  # Write list indicating all macro stored
-  completeList= completeList + " '@orbit/geo/" + directory + warpScriptFileName + "'"
-
-# Finish WarpSctip list and macro
-completeList=completeList + " ] %>"
-
-# Write complete macro list inside a WarpScript macro file
-f = open(jsonConf.get('prefix') + 'Items.mc2', 'w')
-f.write(completeList)
-f.close()
 
 

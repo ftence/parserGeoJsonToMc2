@@ -1,10 +1,36 @@
-{
-	"filename": "my.geojson",
-	"prefix": "tmp/",
-	"warpscriptLoad": "name",
-	"directories": 
-	[
-		"country",
-		"region"
-	]
-}
+ [
+	{
+		"filename": "first.geojson",
+		"prefix": "to/region/",
+		"warpscriptName": "Region",
+		"inside": "false",
+		"errorPercentage": "0.001",
+		"directories": 
+		[
+			"region"
+		],
+		"allMacroFileName": "Regions"
+	},
+	{
+		"filename": "second.GeoJson",
+		"prefix": "to/",
+		"warpscriptLoad": "name",
+		"inside": "false",
+		"errorPercentage": "0.01",
+		"directories": 
+		[
+		]
+	},
+	{
+		"filename": "third.GeoJson",
+		"prefix": "to/",
+		"warpscriptName": "Item",
+		"inside": "false",
+		"errorPercentage": "0.001",
+		"directories": 
+		[
+			"name"
+		],
+		"allMacroFileName": "Items"
+	}
+]

@@ -30,14 +30,18 @@ The file generated as output containing the GEO macro will be called Country.mc2
 To load the file name accoriding to a property of the feature, you can replace the warpscriptName option by warpscriptLoad.
 
 ```
-	"filename": "my.geojson",
-	"prefix": "tmp/",
-	"warpscriptLoad": "name",
-	"directories": 
-	[
-		"Country"
-	],
-	"allMacroFileName": "Items"
+[
+	{
+		"filename": "my.geojson",
+		"prefix": "tmp/",
+		"warpscriptLoad": "name",
+		"directories": 
+		[
+			"Country"
+		],
+		"allMacroFileName": "Items"
+	}
+]
 ```
 
 Using this conf file the file generates will be a macro file using the "name" property of the current feature. All the special charachter are deleted and replaced by '_'. Each macro name will start with an uppercase. 

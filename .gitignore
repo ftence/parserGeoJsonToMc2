@@ -1,3 +1,5 @@
 *.GeoJson
 *.geojson
+*.json
 geojson.conf
+geo/

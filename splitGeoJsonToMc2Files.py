@@ -27,7 +27,11 @@ for geoJsonConf in jsonConf:
 
   # Get GEOJSON file features (includes the geometry and properties)
   features=jsonDecode.get('features')
+
+  splitListMacro=geoJsonConf.get('splitPerDirectory', False);
   completeList="<% [ "
+
+  itemForList={}
 
   for item in features:
 
@@ -78,7 +82,19 @@ for geoJsonConf in jsonConf:
       f.close()
 
     # Write list indicating all macro stored
-    completeList= completeList + " '@orbit/geo/" + directory + warpScriptFileName + "'"
+    if not splitListMacro:
+      completeList = completeList + " '@orbit/" + directory + warpScriptFileName + "'"
+
+    # In case you generate one file per directory
+    if splitListMacro:
+
+      # Add file to current directory key
+      if directory in itemForList:
+        currentList = itemForList.get(directory) + " '@orbit/" + directory + warpScriptFileName + "'"
+        itemForList[directory] = currentList
+      else:
+        currentList = completeList +  " '@orbit/" + directory + warpScriptFileName + "'"
+        itemForList[directory] = currentList
 
   # Finish WarpSctip list and macro
   completeList=completeList + " ] %>"
@@ -88,9 +104,23 @@ for geoJsonConf in jsonConf:
 
   if not "" == allMacro:
 
-    # Write complete macro list inside a WarpScript macro file
-    f = open(geoJsonConf.get('prefix') + allMacro + '.mc2', 'w')
-    f.write(completeList)
-    f.close()
+    # Write file containing all macro in root directory according to conf parameters set
+    if not splitListMacro:
 
+      # Write complete macro list inside a WarpScript macro file
+      f = open(geoJsonConf.get('prefix') + allMacro + '.mc2', 'w')
+      f.write(completeList)
+      f.close()
+
+    # Case split according to files
+    if splitListMacro:
+      for key in itemForList.keys():
+        currentList = itemForList.get(key)
+        currentList = currentList + " ] %>"
+
+        # Write complete macro list inside a WarpScript macro file
+        f = open(key + allMacro + '.mc2', 'w')
+        f.write(currentList)
+        f.close()
+        print(key + allMacro + '.mc2')
 

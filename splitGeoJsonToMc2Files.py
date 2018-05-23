@@ -61,6 +61,9 @@ def main(args):
         # cleaning yield the same result
         filenames = set()
 
+        # Apply title or not on the filename (True by default)
+        titlize_name = geoJsonConf.get('titlize', True)
+
         split_list_macro = geoJsonConf.get('splitPerDirectory', False)
         complete_list = '<% [ '
 
@@ -98,7 +101,10 @@ def main(args):
                     if not '' == json_load:
                         # Then get from the GEOJSON properties the current WarpScript file name
                         current_file_name = get_value_from_expression(item.get('properties'), json_load)
-                        warp_script_file_name = clean_str(current_file_name, legacy_str_cleaning_flag).title().replace(" ", "_")
+                        clean_current_file_name = clean_str(current_file_name, legacy_str_cleaning_flag)
+                        if titlize_name:
+                            clean_current_file_name = clean_current_file_name.title()
+                        warp_script_file_name = clean_current_file_name.replace(" ", "_")
 
                 # When an output file name is set in conf
                 if not '' == warp_script_file_name:
